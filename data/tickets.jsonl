@@ -1,0 +1,24 @@
+{"id": "T001", "text": "I forgot my password and can't log in. How do I reset it?", "category": "account", "priority": "high", "team": "account_management", "action": "auto_resolve"}
+{"id": "T002", "text": "How do I change the credit card on my account? The old one expired.", "category": "billing", "priority": "medium", "team": "billing", "action": "auto_resolve"}
+{"id": "T003", "text": "I want a refund for the charge I got yesterday, it was within the last few days.", "category": "billing", "priority": "medium", "team": "billing", "action": "auto_resolve"}
+{"id": "T004", "text": "How do I turn on two-factor authentication for my account?", "category": "account", "priority": "low", "team": "account_management", "action": "auto_resolve"}
+{"id": "T005", "text": "The mobile app crashes every time I open it. What can I do?", "category": "technical", "priority": "high", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T006", "text": "Can you tell me how to export all my data to CSV?", "category": "technical", "priority": "low", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T007", "text": "I want to upgrade from the basic plan to the pro plan. How does billing work?", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T008", "text": "My API calls keep returning 429 errors. How do I fix the rate limiting?", "category": "technical", "priority": "medium", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T009", "text": "How do I cancel my subscription? I don't want to renew next month.", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T010", "text": "Where can I download a PDF invoice for last month's payment?", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T011", "text": "I was charged twice for the same month three months ago and support never fixed it. I've been disputing this for weeks and I'm furious.", "category": "billing", "priority": "high", "team": "billing", "action": "escalate"}
+{"id": "T012", "text": "I lost my phone and my authenticator app, and I don't have my backup codes. I can't get into my account at all.", "category": "account", "priority": "urgent", "team": "account_management", "action": "escalate"}
+{"id": "T013", "text": "Ever since your last update the whole app is unusable, it crashes even after a clean reinstall on three different devices. This is affecting my whole team.", "category": "technical", "priority": "urgent", "team": "technical_support", "action": "escalate"}
+{"id": "T014", "text": "It would be great if you added a dark mode and a Slack integration. Any plans for that?", "category": "feature_request", "priority": "low", "team": "product", "action": "escalate"}
+{"id": "T015", "text": "I think my account has been hacked, there are logins from another country and data is missing.", "category": "account", "priority": "urgent", "team": "account_management", "action": "escalate"}
+{"id": "T016", "text": "I need a custom rate limit of 5000 requests per minute for an enterprise integration, higher than your published tiers.", "category": "technical", "priority": "medium", "team": "technical_support", "action": "escalate"}
+{"id": "T017", "text": "Hi, just wanted to say your product is great. Also, is there a student discount and can I get a W-9 form and also change my billing country?", "category": "billing", "priority": "low", "team": "billing", "action": "escalate"}
+{"id": "T018", "text": "My export has been stuck for two days and the download link you emailed is broken, and separately my invoices show the wrong company name.", "category": "technical", "priority": "medium", "team": "technical_support", "action": "escalate"}
+{"id": "T019", "text": "The password reset link says it expired even though I clicked it immediately, and I've tried five times.", "category": "account", "priority": "high", "team": "account_management", "action": "escalate"}
+{"id": "T020", "text": "How long are password reset links valid for?", "category": "account", "priority": "low", "team": "account_management", "action": "auto_resolve"}
+{"id": "T021", "text": "What's your refund window for annual plans?", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T022", "text": "I'm getting charged even though I cancelled last week. Why?", "category": "billing", "priority": "high", "team": "billing", "action": "escalate"}
+{"id": "T023", "text": "Does upgrading my plan delete any of my existing data?", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T024", "text": "Nothing works and I'm about to cancel everything. Fix it now.", "category": "general", "priority": "high", "team": "general_support", "action": "escalate"}
