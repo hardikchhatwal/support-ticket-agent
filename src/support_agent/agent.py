@@ -22,15 +22,18 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from pydantic_ai import Agent, RunContext
+from pydantic_ai.messages import ModelMessage, ToolCallPart, ToolReturnPart
 
 from support_agent.config import settings
 from support_agent.knowledge_base import KnowledgeBase
 from support_agent.schema import (
     Action,
     KBHit,
+    KBSearch,
     RoutingDecision,
     TicketClassification,
     TicketDecision,
+    TriageTrace,
 )
 
 CLASSIFY_PROMPT = """You are a support-ticket classifier.
@@ -156,6 +159,10 @@ class TriageAgent:
         )
 
     def triage(self, ticket_text: str) -> TicketDecision:
+        return self.triage_explained(ticket_text).decision
+
+    def triage_explained(self, ticket_text: str) -> TriageTrace:
+        """Like ``triage`` but also returns the intermediate reasoning and KB searches."""
         classification = self.classifier.run_sync(ticket_text).output
 
         route_input = (
@@ -163,9 +170,31 @@ class TriageAgent:
             f"Classified category: {classification.category.value}\n"
             f"Classified priority: {classification.priority.value}"
         )
-        routing = self.router.run_sync(
-            route_input, deps=TriageDeps(kb=self.kb)
-        ).output
-        routing = _apply_safety_guardrail(routing, self.threshold)
+        result = self.router.run_sync(route_input, deps=TriageDeps(kb=self.kb))
+        guarded = _apply_safety_guardrail(result.output, self.threshold)
 
-        return TicketDecision.merge(classification, routing)
+        return TriageTrace(
+            decision=TicketDecision.merge(classification, guarded),
+            classification_reasoning=classification.reasoning,
+            searches=_extract_searches(result.all_messages()),
+            guardrail_applied=guarded.action != result.output.action,
+        )
+
+
+def _extract_searches(messages: List[ModelMessage]) -> List[KBSearch]:
+    """Pair each ``search_kb`` tool call with the hits it returned."""
+    queries = {}
+    searches: List[KBSearch] = []
+    for message in messages:
+        for part in message.parts:
+            if isinstance(part, ToolCallPart) and part.tool_name == "search_kb":
+                queries[part.tool_call_id] = str(part.args_as_dict().get("query", ""))
+            elif isinstance(part, ToolReturnPart) and part.tool_name == "search_kb":
+                hits = part.content if isinstance(part.content, list) else []
+                searches.append(
+                    KBSearch(
+                        query=queries.get(part.tool_call_id, ""),
+                        hits=[KBHit.model_validate(h) for h in hits],
+                    )
+                )
+    return searches

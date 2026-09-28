@@ -22,3 +22,55 @@
 {"id": "T022", "text": "I'm getting charged even though I cancelled last week. Why?", "category": "billing", "priority": "high", "team": "billing", "action": "escalate"}
 {"id": "T023", "text": "Does upgrading my plan delete any of my existing data?", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
 {"id": "T024", "text": "Nothing works and I'm about to cancel everything. Fix it now.", "category": "general", "priority": "high", "team": "general_support", "action": "escalate"}
+{"id": "T025", "text": "My card was declined for this month's payment. How do I fix it so I don't lose access?", "category": "billing", "priority": "high", "team": "billing", "action": "auto_resolve"}
+{"id": "T026", "text": "How do I add our VAT number so it shows up on future invoices?", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T027", "text": "Do you have a student discount? I'm at university.", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T028", "text": "We're a registered nonprofit. Is there a discount and how do we apply?", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T029", "text": "How much would I save by switching to annual billing?", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T030", "text": "If I remove a team member, do I get money back for their seat?", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T031", "text": "How do I add three more people to our workspace, and how is that billed?", "category": "billing", "priority": "low", "team": "billing", "action": "auto_resolve"}
+{"id": "T032", "text": "I was charged for my monthly plan 5 days ago and don't need it anymore. Can I get a refund?", "category": "billing", "priority": "medium", "team": "billing", "action": "auto_resolve"}
+{"id": "T033", "text": "I was charged $49 three times this morning. Please refund the extra charges now.", "category": "billing", "priority": "high", "team": "billing", "action": "escalate"}
+{"id": "T034", "text": "Our vendor onboarding needs a W-9 form from you.", "category": "billing", "priority": "low", "team": "billing", "action": "escalate"}
+{"id": "T035", "text": "We have 120 users and want volume pricing for an enterprise contract.", "category": "billing", "priority": "low", "team": "billing", "action": "escalate"}
+{"id": "T036", "text": "I bought an annual plan 3 months ago and want a full refund.", "category": "billing", "priority": "medium", "team": "billing", "action": "escalate"}
+{"id": "T037", "text": "My bank filed a chargeback on your charge. What happens to my account now?", "category": "billing", "priority": "high", "team": "billing", "action": "escalate"}
+{"id": "T038", "text": "How do I change the email address I log in with?", "category": "account", "priority": "low", "team": "account_management", "action": "auto_resolve"}
+{"id": "T039", "text": "I want to permanently delete my account. What are the steps?", "category": "account", "priority": "low", "team": "account_management", "action": "auto_resolve"}
+{"id": "T040", "text": "How do we set up SAML single sign-on with Okta for our team?", "category": "account", "priority": "low", "team": "account_management", "action": "auto_resolve"}
+{"id": "T041", "text": "I got an email about a new sign-in from Chrome on Windows. That was me on my new laptop. Do I need to do anything?", "category": "account", "priority": "low", "team": "account_management", "action": "auto_resolve"}
+{"id": "T042", "text": "I lost my phone with my authenticator app, but I saved my backup codes. How do I get back in?", "category": "account", "priority": "high", "team": "account_management", "action": "auto_resolve"}
+{"id": "T043", "text": "The password reset email isn't showing up in my inbox.", "category": "account", "priority": "high", "team": "account_management", "action": "auto_resolve"}
+{"id": "T044", "text": "I no longer have access to my old work email and I can't sign in to change it.", "category": "account", "priority": "high", "team": "account_management", "action": "escalate"}
+{"id": "T045", "text": "Someone changed my account email and password and I'm locked out. There are payments on it I didn't make.", "category": "account", "priority": "urgent", "team": "account_management", "action": "escalate"}
+{"id": "T046", "text": "We need SCIM user provisioning with Azure AD for 300 users.", "category": "account", "priority": "low", "team": "account_management", "action": "escalate"}
+{"id": "T047", "text": "Our SSO test keeps failing with a signature error even after re-downloading the metadata, and now none of our 40 staff can log in.", "category": "account", "priority": "urgent", "team": "account_management", "action": "escalate"}
+{"id": "T048", "text": "How do I create an API key, and where do I put it in the request?", "category": "technical", "priority": "low", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T049", "text": "Our API calls started returning 401 right after an employee left the company and was removed from the workspace.", "category": "technical", "priority": "medium", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T050", "text": "My webhook endpoint isn't receiving events. How can I see what's going wrong?", "category": "technical", "priority": "medium", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T051", "text": "Edits I make on my phone don't show up on my laptop.", "category": "technical", "priority": "medium", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T052", "text": "My CSV import skipped a bunch of rows. Why would that happen?", "category": "technical", "priority": "medium", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T053", "text": "Can I import my boards from Trello?", "category": "technical", "priority": "low", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T054", "text": "The web app just shows a blank white page in Firefox but works fine in Chrome.", "category": "technical", "priority": "medium", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T055", "text": "When do you usually do scheduled maintenance?", "category": "technical", "priority": "low", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T056", "text": "Do you support Internet Explorer 11?", "category": "technical", "priority": "low", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T057", "text": "The app keeps freezing as soon as I open it on my iPad.", "category": "technical", "priority": "high", "team": "technical_support", "action": "auto_resolve"}
+{"id": "T058", "text": "Half of the items in my project vanished after syncing, even after signing out and back in.", "category": "technical", "priority": "urgent", "team": "technical_support", "action": "escalate"}
+{"id": "T059", "text": "Your status page says all systems operational, but every request we send to your API is returning 500.", "category": "technical", "priority": "urgent", "team": "technical_support", "action": "escalate"}
+{"id": "T060", "text": "Our webhooks keep getting disabled automatically within minutes of re-enabling them, even though our endpoint returns 200.", "category": "technical", "priority": "high", "team": "technical_support", "action": "escalate"}
+{"id": "T061", "text": "Two imports have been stuck at 'processing' for three days and the undo button does nothing.", "category": "technical", "priority": "medium", "team": "technical_support", "action": "escalate"}
+{"id": "T062", "text": "Where can I submit a feature idea and see what's on your roadmap?", "category": "feature_request", "priority": "low", "team": "product", "action": "auto_resolve"}
+{"id": "T063", "text": "When will the Jira integration be released?", "category": "feature_request", "priority": "low", "team": "product", "action": "auto_resolve"}
+{"id": "T064", "text": "I upvoted the offline mode request months ago. How will I know when it ships?", "category": "feature_request", "priority": "low", "team": "product", "action": "auto_resolve"}
+{"id": "T065", "text": "Please add a Gantt chart view. We really need it for project planning.", "category": "feature_request", "priority": "low", "team": "product", "action": "escalate"}
+{"id": "T066", "text": "It would be nice to have keyboard shortcuts for moving items between columns.", "category": "feature_request", "priority": "low", "team": "product", "action": "escalate"}
+{"id": "T067", "text": "Can you build a native Linux desktop app?", "category": "feature_request", "priority": "low", "team": "product", "action": "escalate"}
+{"id": "T068", "text": "What are your support hours?", "category": "general", "priority": "low", "team": "general_support", "action": "auto_resolve"}
+{"id": "T069", "text": "Do you offer phone support?", "category": "general", "priority": "low", "team": "general_support", "action": "auto_resolve"}
+{"id": "T070", "text": "Are you SOC 2 compliant? Our procurement team is asking.", "category": "general", "priority": "low", "team": "general_support", "action": "auto_resolve"}
+{"id": "T071", "text": "Where is my data stored, and is it encrypted?", "category": "general", "priority": "low", "team": "general_support", "action": "auto_resolve"}
+{"id": "T072", "text": "How do we sign your DPA for GDPR?", "category": "general", "priority": "low", "team": "general_support", "action": "auto_resolve"}
+{"id": "T073", "text": "Our security team needs you to complete a 200-question vendor security questionnaire.", "category": "general", "priority": "low", "team": "general_support", "action": "escalate"}
+{"id": "T074", "text": "Hello?", "category": "general", "priority": "low", "team": "general_support", "action": "escalate"}
+{"id": "T075", "text": "I've emailed three times this week and nobody has replied. What is going on?", "category": "general", "priority": "medium", "team": "general_support", "action": "escalate"}
+{"id": "T076", "text": "We need your latest penetration test report before we can sign the contract.", "category": "general", "priority": "low", "team": "general_support", "action": "escalate"}

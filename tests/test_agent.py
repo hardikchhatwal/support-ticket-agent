@@ -122,8 +122,13 @@ def test_router_uses_kb_and_can_auto_resolve(kb):
         classifier_model=FunctionModel(classify_fn),
         router_model=FunctionModel(route_fn),
     )
-    decision = agent.triage("I forgot my password and can't log in.")
+    trace = agent.triage_explained("I forgot my password and can't log in.")
+    decision = trace.decision
     assert calls["searched"] is True
     assert decision.action == Action.AUTO_RESOLVE
     assert decision.kb_citation == "reset_password"
     assert decision.team == Team.ACCOUNT_MANAGEMENT
+    assert trace.classification_reasoning == "sign-in problem"
+    assert not trace.guardrail_applied
+    assert [s.query for s in trace.searches] == ["reset password"]
+    assert trace.searches[0].hits[0].article_id == "reset_password"

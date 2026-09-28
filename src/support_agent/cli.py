@@ -4,6 +4,7 @@ Examples:
     support-agent ingest
     support-agent triage "I can't log in and the reset email never arrives."
     support-agent triage --file ticket.txt
+    support-agent serve
 """
 
 from __future__ import annotations
@@ -57,6 +58,16 @@ def _cmd_triage(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_serve(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    print(f"Serving on http://{args.host}:{args.port}  (API docs at /docs)")
+    uvicorn.run(
+        "support_agent.api:app", host=args.host, port=args.port, reload=args.reload
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="support-agent",
@@ -71,6 +82,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_triage.add_argument("text", nargs="?", help="Ticket text (or use --file/stdin).")
     p_triage.add_argument("--file", help="Read ticket text from a file.")
     p_triage.set_defaults(func=_cmd_triage)
+
+    p_serve = sub.add_parser("serve", help="Run the HTTP API + test page.")
+    p_serve.add_argument("--host", default="127.0.0.1")
+    p_serve.add_argument("--port", type=int, default=8000)
+    p_serve.add_argument("--reload", action="store_true", help="Auto-reload on code changes.")
+    p_serve.set_defaults(func=_cmd_serve)
 
     return parser
 

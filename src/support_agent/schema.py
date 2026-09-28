@@ -131,6 +131,22 @@ class TicketDecision(BaseModel):
         )
 
 
+class KBSearch(BaseModel):
+    """One ``search_kb`` call made by the router, with its ranked hits."""
+
+    query: str
+    hits: List[KBHit] = Field(default_factory=list)
+
+
+class TriageTrace(BaseModel):
+    """The decision plus the intermediate steps that produced it (for UIs/debugging)."""
+
+    decision: TicketDecision
+    classification_reasoning: str
+    searches: List[KBSearch] = Field(default_factory=list)
+    guardrail_applied: bool = False
+
+
 def routing_priority_override(
     classification: TicketClassification, routing: RoutingDecision
 ) -> Priority:

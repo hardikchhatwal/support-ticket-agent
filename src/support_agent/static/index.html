@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ticket Triage</title>
+<style>
+  :root {
+    --bg: #f6f6f4; --panel: #fff; --sunken: #f1f1ee; --text: #1d1d1f; --muted: #6b6b70;
+    --border: #e3e3e0; --accent: #2f5bea; --accent-soft: #e8eeff;
+    --ok-bg: #e5f4ea; --ok-fg: #1c6a33; --bad-bg: #fdeceb; --bad-fg: #a3261b;
+    --warn-bg: #fff3dc; --warn-fg: #8a5a00; --info-bg: #e8eeff; --info-fg: #2745b8;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141416; --panel: #1d1d20; --sunken: #18181b; --text: #ececee; --muted: #9a9aa2;
+      --border: #313136; --accent: #7c9bff; --accent-soft: #232b45;
+      --ok-bg: #16361f; --ok-fg: #8fdca5; --bad-bg: #43201c; --bad-fg: #ffaaa0;
+      --warn-bg: #3a2d10; --warn-fg: #f5c86b; --info-bg: #232b45; --info-fg: #a9bcff;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14.5px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+  }
+  button { font: inherit; color: inherit; }
+  header {
+    position: sticky; top: 0; z-index: 5; background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar { max-width: 1180px; margin: 0 auto; padding: 12px 20px 0; }
+  .brand { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .brand h1 { font-size: 17px; margin: 0; }
+  .brand .logo {
+    width: 26px; height: 26px; border-radius: 7px; background: var(--accent);
+    display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 14px;
+  }
+  .status { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .pill {
+    font-size: 12px; padding: 2px 9px; border-radius: 999px;
+    background: var(--sunken); border: 1px solid var(--border); color: var(--muted);
+  }
+  .pill.bad { background: var(--bad-bg); color: var(--bad-fg); border-color: transparent; }
+  nav { display: flex; gap: 4px; margin-top: 10px; }
+  nav button {
+    background: none; border: 0; padding: 8px 12px; cursor: pointer; color: var(--muted);
+    border-bottom: 2px solid transparent; font-weight: 500;
+  }
+  nav button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; box-shadow: var(--shadow);
+  }
+  .panel + .panel { margin-top: 14px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12.5px; }
+  .cap { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+
+  /* Triage tab */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  textarea {
+    width: 100%; min-height: 110px; resize: vertical; padding: 12px;
+    font: inherit; color: var(--text); background: var(--sunken);
+    border: 1px solid var(--border); border-radius: 9px;
+  }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .examples { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
+  .chip-btn {
+    font-size: 12.5px; padding: 4px 10px; cursor: pointer;
+    background: var(--sunken); border: 1px solid var(--border); border-radius: 999px;
+  }
+  .chip-btn:hover { border-color: var(--accent); }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .spacer { flex: 1; }
+  .primary {
+    font-weight: 600; padding: 8px 18px; cursor: pointer;
+    background: var(--accent); color: #fff; border: 0; border-radius: 8px;
+  }
+  .primary:disabled { opacity: .55; cursor: default; }
+  .ghost {
+    padding: 6px 12px; cursor: pointer; background: none;
+    border: 1px solid var(--border); border-radius: 8px;
+  }
+  .ghost:hover { border-color: var(--accent); }
+  .ghost:disabled { opacity: .5; cursor: default; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px; border-radius: 999px;
+    font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .badge.auto_resolve { background: var(--ok-bg); color: var(--ok-fg); }
+  .badge.escalate { background: var(--bad-bg); color: var(--bad-fg); }
+  .badge.guard { background: var(--warn-bg); color: var(--warn-fg); text-transform: none; letter-spacing: 0; font-weight: 600; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 6px; font-size: 12.5px; font-weight: 600; background: var(--sunken); }
+  .tag.low { color: var(--muted); }
+  .tag.medium { background: var(--info-bg); color: var(--info-fg); }
+  .tag.high { background: var(--warn-bg); color: var(--warn-fg); }
+  .tag.urgent { background: var(--bad-bg); color: var(--bad-fg); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 16px 0 4px; }
+  .field .v { font-weight: 600; margin-top: 2px; }
+  .meter { position: relative; height: 7px; background: var(--sunken); border-radius: 4px; margin-top: 7px; }
+  .meter > .fill { height: 100%; border-radius: 4px; background: var(--accent); }
+  .meter > .tick { position: absolute; top: -3px; width: 2px; height: 13px; background: var(--text); opacity: .55; }
+  .draft {
+    background: var(--accent-soft); border-radius: 9px; padding: 12px 14px; margin-top: 6px;
+    white-space: pre-wrap;
+  }
+  .section { margin-top: 18px; }
+
+  .steps { list-style: none; margin: 8px 0 0; padding: 0; }
+  .steps > li { position: relative; padding: 0 0 16px 34px; }
+  .steps > li::before {
+    content: attr(data-n); position: absolute; left: 0; top: 0; width: 22px; height: 22px;
+    border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+    display: grid; place-items: center; font-size: 12px; font-weight: 700;
+  }
+  .steps > li:not(:last-child)::after {
+    content: ""; position: absolute; left: 10.5px; top: 26px; bottom: 4px; width: 1px; background: var(--border);
+  }
+  .steps h4 { margin: 0 0 3px; font-size: 13.5px; }
+  .query { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+  .hits { list-style: none; padding: 0; margin: 6px 0 10px; }
+  .hits li { display: grid; grid-template-columns: minmax(0, 1fr) 90px 42px; gap: 10px; align-items: center; padding: 3px 0; font-size: 13px; }
+  .hits li.cited { font-weight: 600; }
+  .hits .bar { height: 5px; background: var(--sunken); border-radius: 3px; overflow: hidden; }
+  .hits .bar > div { height: 100%; background: var(--muted); opacity: .6; }
+  .hits li.cited .bar > div { background: var(--ok-fg); opacity: 1; }
+  .link { color: var(--accent); cursor: pointer; background: none; border: 0; padding: 0; text-align: left; }
+  .link:hover { text-decoration: underline; }
+
+  details { margin-top: 14px; }
+  summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  pre {
+    overflow-x: auto; background: var(--sunken); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; font-size: 12.5px;
+  }
+  .error { background: var(--bad-bg); color: var(--bad-fg); border-color: transparent; }
+  .skeleton { display: grid; gap: 10px; }
+  .skeleton div { height: 14px; border-radius: 6px; background: var(--sunken); animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .45; } }
+  .progress-steps { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; font-size: 13px; }
+  .progress-steps span.on { color: var(--accent); font-weight: 600; }
+
+  .history { list-style: none; padding: 0; margin: 8px 0 0; }
+  .history li { border-top: 1px solid var(--border); }
+  .history button {
+    width: 100%; text-align: left; background: none; border: 0; padding: 9px 2px; cursor: pointer;
+  }
+  .history button:hover .t { color: var(--accent); }
+  .history .t { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 13px; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+  .dot.auto_resolve { background: var(--ok-fg); }
+  .dot.escalate { background: var(--bad-fg); }
+
+  /* Test set tab */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .tile { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); }
+  .tile .num { font-size: 22px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .tile .target { font-size: 12px; color: var(--muted); }
+  .tile.pass .num { color: var(--ok-fg); }
+  .tile.fail .num { color: var(--bad-fg); }
+  select, input[type="search"] {
+    font: inherit; color: var(--text); background: var(--sunken);
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
+  }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding: 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td.txt { min-width: 260px; }
+  td:not(.txt) { white-space: nowrap; }
+  td .exp { color: var(--muted); font-size: 12px; }
+  td.hit { color: var(--ok-fg); }
+  td.miss { color: var(--bad-fg); font-weight: 600; }
+  td.miss .exp { font-weight: 400; }
+  tr.danger { background: var(--bad-bg); }
+
+  /* KB tab */
+  .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-top: 14px; }
+  .kb-card { text-align: left; cursor: pointer; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); }
+  .kb-card:hover { border-color: var(--accent); }
+  .kb-card h3 { margin: 6px 0 4px; font-size: 14.5px; }
+  .kb-card p { margin: 0; color: var(--muted); font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .article h2 { margin: 6px 0 10px; font-size: 18px; }
+  .article ol, .article ul { padding-left: 22px; }
+  .article code { background: var(--sunken); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+
+  dialog {
+    border: 1px solid var(--border); border-radius: 14px; padding: 0; max-width: 640px; width: calc(100% - 32px);
+    background: var(--panel); color: var(--text);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.35); }
+  dialog .inner { padding: 20px 22px; max-height: 80vh; overflow: auto; }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">T</div>
+      <h1>Support Ticket Triage</h1>
+      <div class="status" id="status"><span class="pill">connecting…</span></div>
+    </div>
+    <nav role="tablist">
+      <button role="tab" data-tab="triage" aria-selected="true">Triage</button>
+      <button role="tab" data-tab="tests" aria-selected="false">Test set</button>
+      <button role="tab" data-tab="kb" aria-selected="false">Knowledge base</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- Triage -->
+  <section id="tab-triage">
+    <div class="layout">
+      <div>
+        <form class="panel" id="form">
+          <label class="cap" for="text">Incoming ticket</label>
+          <textarea id="text" placeholder="e.g. I was charged twice this month and want my money back." required style="margin-top:6px"></textarea>
+          <div class="examples" id="examples"></div>
+          <div class="row">
+            <button class="primary" id="submit" type="submit">Triage ticket</button>
+            <span class="muted small">⌘/Ctrl + Enter</span>
+          </div>
+        </form>
+        <section id="result" class="panel" hidden></section>
+      </div>
+      <aside class="panel">
+        <div class="row"><span class="cap">Recent</span><span class="spacer"></span>
+          <button class="link small" id="clear-history" type="button">Clear</button></div>
+        <ul class="history" id="history"></ul>
+        <p class="muted small" id="history-empty">Triaged tickets appear here.</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Test set -->
+  <section id="tab-tests" hidden>
+    <div class="tiles" id="tiles"></div>
+    <div class="panel">
+      <div class="row" style="margin-bottom:12px">
+        <select id="f-cat" aria-label="Filter by category"><option value="">All categories</option></select>
+        <select id="f-act" aria-label="Filter by expected action">
+          <option value="">All actions</option><option value="auto_resolve">Expected auto-resolve</option><option value="escalate">Expected escalate</option>
+        </select>
+        <select id="f-res" aria-label="Filter by result">
+          <option value="">All results</option><option value="miss">Mismatches only</option><option value="pending">Not run yet</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="muted small" id="run-status"></span>
+        <button class="primary" id="run-all" type="button">Run shown</button>
+        <button class="ghost" id="stop" type="button" hidden>Stop</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Ticket</th><th>Category</th><th>Priority</th><th>Team</th><th>Action</th><th></th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="muted small" style="margin:10px 0 0">Each cell shows the agent's answer, with the expected label underneath when they differ. Rows in red are false auto-resolves, the key safety failure.</p>
+    </div>
+  </section>
+
+  <!-- Knowledge base -->
+  <section id="tab-kb" hidden>
+    <div class="row">
+      <input type="search" id="kb-q" placeholder="Search articles…" style="flex:1; min-width:200px">
+      <select id="kb-cat" aria-label="Filter by category"><option value="">All categories</option></select>
+    </div>
+    <div class="kb-grid" id="kb-grid"></div>
+  </section>
+</main>
+
+<dialog id="dlg"><div class="inner">
+  <div class="row"><span class="spacer"></span><button class="ghost small" id="dlg-close" type="button">Close</button></div>
+  <div class="article" id="dlg-body"></div>
+</div></dialog>
+
+<script>
+const EXAMPLES = [
+  "I forgot my password and the reset email never arrives.",
+  "How do I cancel my subscription?",
+  "I was charged $49 three times this morning. Please refund the extra charges.",
+  "Your API has been returning 500s on all production traffic for an hour.",
+  "Please add a Gantt chart view, we need it for planning.",
+  "Are you SOC 2 compliant? Our procurement team is asking.",
+  "Our webhook endpoint isn't receiving events. How do I debug it?",
+  "I lost my phone and my 2FA backup codes. How do I get back in?",
+];
+const HISTORY_KEY = "triage-history-v1";
+let health = { autoresolve_threshold: 0.75 };
+let articles = [];
+let tickets = [];
+const results = {};           // ticket id -> decision
+let running = false;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const label = (s) => String(s ?? "").replace(/_/g, " ");
+const pct = (x) => Math.round(x * 100) + "%";
+
+function toast(msg) {
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1800);
+}
+
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : res.statusText);
+  return data;
+}
+
+/* ---------- tabs ---------- */
+function showTab(name) {
+  document.querySelectorAll("nav button").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === name));
+  for (const t of ["triage", "tests", "kb"]) $("tab-" + t).hidden = t !== name;
+  try { localStorage.setItem("triage-tab", name); } catch {}
+}
+document.querySelectorAll("nav button").forEach((b) => b.onclick = () => showTab(b.dataset.tab));
+
+/* ---------- status ---------- */
+api("/health").then((h) => {
+  health = h;
+  const pills = [];
+  if (!h.openai_key_set) pills.push(`<span class="pill bad">OPENAI_API_KEY not set</span>`);
+  if (!h.kb_chunks) pills.push(`<span class="pill bad">KB not indexed — run support-agent ingest</span>`);
+  pills.push(`<span class="pill">${esc(h.model.replace(/^openai:/, ""))}</span>`);
+  pills.push(`<span class="pill">${h.kb_articles} articles · ${h.kb_chunks} chunks</span>`);
+  pills.push(`<span class="pill">auto-resolve ≥ ${pct(h.autoresolve_threshold)}</span>`);
+  $("status").innerHTML = pills.join("");
+}).catch(() => { $("status").innerHTML = `<span class="pill bad">server unreachable</span>`; });
+
+/* ---------- mini markdown for KB articles ---------- */
+function md(text) {
+  const inline = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+  const out = []; let list = null;
+  const close = () => { if (list) { out.push(`</${list}>`); list = null; } };
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    let m;
+    if (!line) { close(); continue; }
+    if ((m = line.match(/^\d+\.\s+(.*)/))) { if (list !== "ol") { close(); out.push("<ol>"); list = "ol"; } out.push(`<li>${inline(m[1])}</li>`); }
+    else if ((m = line.match(/^[-*]\s+(.*)/))) { if (list !== "ul") { close(); out.push("<ul>"); list = "ul"; } out.push(`<li>${inline(m[1])}</li>`); }
+    else { close(); out.push(`<p>${inline(line)}</p>`); }
+  }
+  close(); return out.join("");
+}
+
+async function openArticle(id) {
+  let a = articles.find((x) => x.article_id === id);
+  if (!a) { try { a = await api("/kb/" + encodeURIComponent(id)); } catch (e) { return toast(e.message); } }
+  $("dlg-body").innerHTML = `<span class="tag">${esc(label(a.category))}</span>
+    <h2>${esc(a.title)}</h2><div class="muted small">${esc(a.article_id)}.md</div>${md(a.body)}`;
+  $("dlg").showModal();
+}
+$("dlg-close").onclick = () => $("dlg").close();
+$("dlg").addEventListener("click", (e) => { if (e.target === $("dlg")) $("dlg").close(); });
+
+/* ---------- triage ---------- */
+for (const ex of EXAMPLES) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip-btn"; b.title = ex;
+  b.textContent = ex.length > 44 ? ex.slice(0, 42) + "…" : ex;
+  b.onclick = () => { $("text").value = ex; $("text").focus(); };
+  $("examples").appendChild(b);
+}
+$("text").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) $("form").requestSubmit();
+});
+$("form").addEventListener("submit", (e) => { e.preventDefault(); triage($("text").value.trim()); });
+
+function showLoading() {
+  const steps = ["Classifying", "Searching knowledge base", "Deciding"];
+  $("result").className = "panel"; $("result").hidden = false;
+  $("result").innerHTML = `<div class="progress-steps">${steps.map((s, i) => `<span data-i="${i}">${i + 1}. ${s}</span>`).join("")}</div>
+    <div class="skeleton"><div style="width:30%"></div><div></div><div style="width:85%"></div><div style="width:60%"></div></div>`;
+  // Cosmetic progress: the server does all three steps in one request.
+  let i = 0;
+  const tick = () => {
+    $("result").querySelectorAll(".progress-steps span").forEach((s) => s.classList.toggle("on", +s.dataset.i === i));
+  };
+  tick();
+  return setInterval(() => { i = Math.min(i + 1, steps.length - 1); tick(); }, 1400);
+}
+
+async function triage(text, { record = true } = {}) {
+  if (!text) return;
+  $("submit").disabled = true;
+  const timer = showLoading();
+  const t0 = performance.now();
+  try {
+    const trace = await api("/triage/explain", { text });
+    const secs = ((performance.now() - t0) / 1000).toFixed(1);
+    renderTrace(trace, secs);
+    if (record) addHistory(text, trace);
+  } catch (err) {
+    $("result").className = "panel error";
+    $("result").textContent = "Error: " + err.message;
+  } finally {
+    clearInterval(timer);
+    $("submit").disabled = false;
+  }
+}
+
+function renderTrace(trace, secs) {
+  const d = trace.decision;
+  const th = health.autoresolve_threshold;
+  const searches = trace.searches || [];
+  // Hits are chunks; show each article once with its best-scoring chunk.
+  const byArticle = (hits) => {
+    const best = new Map();
+    for (const h of hits) if (!best.has(h.article_id) || best.get(h.article_id).score < h.score) best.set(h.article_id, h);
+    return [...best.values()].sort((a, b) => b.score - a.score);
+  };
+  const searchHtml = searches.length ? searches.map((s) => `
+      <div class="query">“${esc(s.query)}”</div>
+      <ul class="hits">${byArticle(s.hits).map((h) => `
+        <li class="${h.article_id === d.kb_citation ? "cited" : ""}">
+          <button class="link" data-article="${esc(h.article_id)}">${esc(h.title)}${h.article_id === d.kb_citation ? " ✓" : ""}</button>
+          <div class="bar"><div style="width:${pct(h.score)}"></div></div>
+          <span class="muted small">${h.score.toFixed(2)}</span>
+        </li>`).join("")}
+      </ul>`).join("") : `<p class="muted small">No searches recorded.</p>`;
+
+  $("result").className = "panel";
+  $("result").innerHTML = `
+    <div class="row">
+      <span class="badge ${esc(d.action)}">${d.action === "auto_resolve" ? "✓ Auto-resolve" : "↑ Escalate to human"}</span>
+      ${trace.guardrail_applied ? `<span class="badge guard" title="The agent proposed auto-resolve but it lacked a citation or enough confidence.">Safety guardrail downgraded this</span>` : ""}
+      <span class="spacer"></span><span class="muted small">${secs}s</span>
+    </div>
+    <div class="grid">
+      <div class="field"><div class="cap">Category</div><div class="v">${esc(label(d.category))}</div></div>
+      <div class="field"><div class="cap">Priority</div><div class="v"><span class="tag ${esc(d.priority)}">${esc(d.priority)}</span></div></div>
+      <div class="field"><div class="cap">Route to</div><div class="v">${esc(label(d.team))}</div></div>
+      <div class="field"><div class="cap">Confidence</div><div class="v">${pct(d.confidence)}</div>
+        <div class="meter" title="Tick = auto-resolve threshold (${pct(th)})">
+          <div class="fill" style="width:${pct(d.confidence)}"></div><div class="tick" style="left:${pct(th)}"></div></div></div>
+    </div>
+    ${d.draft_resolution ? `
+      <div class="section"><div class="row"><span class="cap">Draft reply</span><span class="spacer"></span>
+        <button class="ghost small" id="copy" type="button">Copy</button></div>
+        <div class="draft" id="draft">${esc(d.draft_resolution)}</div>
+        ${d.kb_citation ? `<div class="small muted" style="margin-top:6px">Source: <button class="link" data-article="${esc(d.kb_citation)}">${esc(d.kb_citation)}</button></div>` : ""}
+      </div>` : ""}
+    <div class="section"><span class="cap">How it decided</span>
+      <ol class="steps">
+        <li data-n="1"><h4>Classify</h4>
+          <div class="small" style="margin-bottom:4px">${esc(label(d.category))} · <span class="tag ${esc(d.priority)}">${esc(d.priority)}</span></div>
+          <div class="muted">${esc(trace.classification_reasoning)}</div></li>
+        <li data-n="2"><h4>Search knowledge base <span class="muted small">(${searches.length} ${searches.length === 1 ? "query" : "queries"})</span></h4>${searchHtml}</li>
+        <li data-n="3"><h4>Route &amp; decide</h4><div class="muted">${esc(d.reasoning)}</div></li>
+      </ol>
+    </div>
+    <details><summary>Raw decision JSON</summary><pre>${esc(JSON.stringify(d, null, 2))}</pre></details>`;
+  $("result").querySelectorAll("[data-article]").forEach((b) => b.onclick = () => openArticle(b.dataset.article));
+  const copy = $("copy");
+  if (copy) copy.onclick = () => navigator.clipboard.writeText(d.draft_resolution).then(() => toast("Draft copied"), () => toast("Copy failed"));
+}
+
+/* ---------- history ---------- */
+function loadHistory() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; } }
+function saveHistory(h) { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); } catch {} }
+function addHistory(text, trace) {
+  const h = [{ text, trace, at: Date.now() }, ...loadHistory()].slice(0, 20);
+  saveHistory(h); renderHistory();
+}
+function renderHistory() {
+  const h = loadHistory();
+  $("history-empty").hidden = h.length > 0;
+  $("history").innerHTML = h.map((e, i) => `<li><button data-i="${i}">
+      <div class="t">${esc(e.text)}</div>
+      <div class="small muted"><span class="dot ${esc(e.trace.decision.action)}"></span>${esc(label(e.trace.decision.team))} · ${esc(e.trace.decision.priority)}</div>
+    </button></li>`).join("");
+  $("history").querySelectorAll("button").forEach((b) => b.onclick = () => {
+    const e = h[+b.dataset.i];
+    $("text").value = e.text; $("result").hidden = false; renderTrace(e.trace, "saved");
+  });
+}
+$("clear-history").onclick = () => { saveHistory([]); renderHistory(); };
+renderHistory();
+
+/* ---------- test set ---------- */
+const FIELDS = ["category", "priority", "team", "action"];
+
+function filteredTickets() {
+  const c = $("f-cat").value, a = $("f-act").value, r = $("f-res").value;
+  return tickets.filter((t) => {
+    if (c && t.category !== c) return false;
+    if (a && t.action !== a) return false;
+    const d = results[t.id];
+    if (r === "pending" && d) return false;
+    if (r === "miss" && !(d && d !== "running" && !d.error && FIELDS.some((f) => d[f] !== t[f]))) return false;
+    return true;
+  });
+}
+
+function renderTable() {
+  $("tbody").innerHTML = filteredTickets().map((t) => {
+    const d = results[t.id];
+    const danger = d && !d.error && d.action === "auto_resolve" && t.action === "escalate";
+    const cells = FIELDS.map((f) => {
+      if (!d) return `<td><span class="muted">${esc(label(t[f]))}</span></td>`;
+      if (d.error) return `<td class="miss">—</td>`;
+      if (d === "running") return `<td class="muted">…</td>`;
+      return d[f] === t[f]
+        ? `<td class="hit">${esc(label(d[f]))}</td>`
+        : `<td class="miss">${esc(label(d[f]))}<div class="exp">expected ${esc(label(t[f]))}</div></td>`;
+    }).join("");
+    return `<tr class="${danger ? "danger" : ""}">
+      <td class="muted">${esc(t.id)}</td>
+      <td class="txt">${esc(t.text)}${d && d.error ? `<div class="exp">${esc(d.error)}</div>` : ""}</td>
+      ${cells}
+      <td><button class="ghost small" data-open="${esc(t.id)}" type="button">Open</button></td></tr>`;
+  }).join("") || `<tr><td colspan="7" class="muted">No tickets match these filters.</td></tr>`;
+  $("tbody").querySelectorAll("[data-open]").forEach((b) => b.onclick = () => {
+    const t = tickets.find((x) => x.id === b.dataset.open);
+    showTab("triage"); $("text").value = t.text; triage(t.text);
+  });
+  renderTiles();
+}
+
+function renderTiles() {
+  const done = tickets.filter((t) => results[t.id] && results[t.id] !== "running" && !results[t.id].error);
+  const n = done.length;
+  const acc = (f) => n ? done.filter((t) => results[t.id][f] === t[f]).length / n : null;
+  const expEsc = done.filter((t) => t.action === "escalate");
+  const falseAuto = expEsc.filter((t) => results[t.id].action === "auto_resolve").length;
+  const predAuto = done.filter((t) => results[t.id].action === "auto_resolve").length;
+  const escRecall = expEsc.length ? expEsc.filter((t) => results[t.id].action === "escalate").length / expEsc.length : null;
+  const far = predAuto ? falseAuto / predAuto : (n ? 0 : null);
+  const tile = (name, v, target, pass, fmt = pct) => `
+    <div class="tile ${v === null ? "" : pass(v) ? "pass" : "fail"}">
+      <div class="cap">${name}</div><div class="num">${v === null ? "—" : fmt(v)}</div><div class="target">${target}</div></div>`;
+  $("tiles").innerHTML = [
+    tile("Run", n, `of ${tickets.length} labeled tickets`, () => true, (v) => v),
+    tile("Routing accuracy", acc("team"), "target ≥ 85%", (v) => v >= 0.85),
+    tile("Category accuracy", acc("category"), "per-ticket match", (v) => v >= 0.8),
+    tile("Priority accuracy", acc("priority"), "per-ticket match", (v) => v >= 0.8),
+    tile("Escalation recall", escRecall, "target ≥ 85%", (v) => v >= 0.85),
+    tile("False auto-resolve", far, `${falseAuto} of ${predAuto} auto-resolves · target < 5%`, (v) => v < 0.05),
+  ].join("");
+}
+
+async function runOne(t) {
+  results[t.id] = "running"; renderTable();
+  try { results[t.id] = await api("/triage", { text: t.text }); }
+  catch (e) { results[t.id] = { error: e.message }; }
+  renderTable();
+}
+
+$("run-all").onclick = async () => {
+  const queue = filteredTickets().slice();
+  if (!queue.length) return;
+  running = true; $("run-all").disabled = true; $("stop").hidden = false;
+  const total = queue.length; let finished = 0;
+  const status = () => $("run-status").textContent = running ? `Running ${finished}/${total}…` : `Stopped at ${finished}/${total}`;
+  status();
+  const worker = async () => {
+    while (running && queue.length) { await runOne(queue.shift()); finished++; status(); }
+  };
+  await Promise.all([worker(), worker(), worker()]);   // 3 tickets in parallel
+  if (running) $("run-status").textContent = `Finished ${finished} tickets`;
+  running = false; $("run-all").disabled = false; $("stop").hidden = true;
+};
+$("stop").onclick = () => { running = false; };
+["f-cat", "f-act", "f-res"].forEach((id) => $(id).onchange = renderTable);
+
+/* ---------- knowledge base ---------- */
+function renderKB() {
+  const q = $("kb-q").value.trim().toLowerCase(), c = $("kb-cat").value;
+  const shown = articles.filter((a) => (!c || a.category === c) &&
+    (!q || (a.title + " " + a.body).toLowerCase().includes(q)));
+  $("kb-grid").innerHTML = shown.map((a) => `
+    <button class="kb-card" data-article="${esc(a.article_id)}" type="button">
+      <span class="tag">${esc(label(a.category))}</span>
+      <h3>${esc(a.title)}</h3><p>${esc(a.body.split("\n")[0])}</p>
+    </button>`).join("") || `<p class="muted">No articles match.</p>`;
+  $("kb-grid").querySelectorAll("[data-article]").forEach((b) => b.onclick = () => openArticle(b.dataset.article));
+}
+$("kb-q").oninput = renderKB; $("kb-cat").onchange = renderKB;
+
+function fillSelect(sel, values) {
+  for (const v of values) { const o = document.createElement("option"); o.value = v; o.textContent = label(v); sel.appendChild(o); }
+}
+
+Promise.all([api("/kb"), api("/tickets")]).then(([a, t]) => {
+  articles = a; tickets = t;
+  fillSelect($("kb-cat"), [...new Set(a.map((x) => x.category))].sort());
+  fillSelect($("f-cat"), [...new Set(t.map((x) => x.category))].sort());
+  renderKB(); renderTable();
+}).catch(() => {});
+
+try { const last = localStorage.getItem("triage-tab"); if (last) showTab(last); } catch {}
+</script>
+</body>
+</html>
